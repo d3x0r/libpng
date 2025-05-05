@@ -18,6 +18,12 @@
 
 #include "pngpriv.h"
 
+#if defined(PNG_USER_MEM_SUPPORTED)
+static voidp          default_memptr;
+static png_malloc_ptr default_malloc_fn;
+static png_free_ptr   default_free_fn;
+#endif
+
 #if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 /* Free a png_struct */
 void /* PRIVATE */
@@ -89,6 +95,8 @@ png_malloc_base,(png_const_structrp png_ptr, png_alloc_size_t size),
 #  ifdef PNG_USER_MEM_SUPPORTED
       if (png_ptr != NULL && png_ptr->malloc_fn != NULL)
          return png_ptr->malloc_fn(png_constcast(png_structrp,png_ptr), size);
+      else if (default_malloc_fn)
+         return default_malloc_fn(png_constcast(png_structrp,png_ptr), size);
 #  else
       PNG_UNUSED(png_ptr)
 #  endif
@@ -235,7 +243,8 @@ png_free(png_const_structrp png_ptr, png_voidp ptr)
 #ifdef PNG_USER_MEM_SUPPORTED
    if (png_ptr->free_fn != NULL)
       png_ptr->free_fn(png_constcast(png_structrp,png_ptr), ptr);
-
+   else if (default_free_fn)
+      default_free_fn(png_constcast(png_structrp,png_ptr), ptr);
    else
       png_free_default(png_ptr, ptr);
 }
@@ -263,6 +272,10 @@ png_set_mem_fn(png_structrp png_ptr, png_voidp mem_ptr, png_malloc_ptr
       png_ptr->mem_ptr = mem_ptr;
       png_ptr->malloc_fn = malloc_fn;
       png_ptr->free_fn = free_fn;
+   } else {
+      default_mem_ptr = mem_ptr;
+      default_malloc_fn = malloc_fn;
+      default_free_fn = free_fn;
    }
 }
 
@@ -274,7 +287,7 @@ png_voidp PNGAPI
 png_get_mem_ptr(png_const_structrp png_ptr)
 {
    if (png_ptr == NULL)
-      return NULL;
+      return default_mem_ptr;
 
    return png_ptr->mem_ptr;
 }

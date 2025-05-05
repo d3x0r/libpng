@@ -1614,10 +1614,20 @@ PNG_EXPORT(81, void, png_set_write_status_fn, (png_structrp png_ptr,
     png_write_status_ptr write_row_fn));
 
 #ifdef PNG_USER_MEM_SUPPORTED
-/* Replace the default memory allocation functions with user supplied one(s). */
+/* Replace the default memory allocation functions with user supplied one(s). 
+ *
+ * If NULL is passed as the png_ptr, then default memory routines for
+ * libpng to use when not otherwise specified for a specific png_struct.  This
+ * allows specifying the memory management functions to be specifed for the
+ * simplified file IO.
+ */
 PNG_EXPORT(82, void, png_set_mem_fn, (png_structrp png_ptr, png_voidp mem_ptr,
     png_malloc_ptr malloc_fn, png_free_ptr free_fn));
-/* Return the user pointer associated with the memory functions */
+/* Return the user pointer associated with the memory functions.
+ *
+ * if NULL is passed for the png_ptr argument, then the default/global mem_ptr
+ * set in png_set_mem_fn( NULL, ... ).
+ */
 PNG_EXPORT(83, png_voidp, png_get_mem_ptr, (png_const_structrp png_ptr));
 #endif
 
